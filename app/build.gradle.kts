@@ -1,5 +1,4 @@
 plugins {
-    id("java")
     application
     id("org.sonarqube") version "7.1.0.6387"
     checkstyle
@@ -11,6 +10,9 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+}
+application {
+    mainClass = "hexlet.code.App"
 }
 sonar {
     properties {
