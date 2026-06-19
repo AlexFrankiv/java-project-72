@@ -1,6 +1,6 @@
 plugins {
     application
-    id("org.sonarqube") version "7.1.0.6387"
+    id("org.sonarqube") version "7.3.1.8318"
     checkstyle
     jacoco
 }
@@ -16,7 +16,7 @@ application {
 }
 sonar {
     properties {
-        property("sonar.projectKey", "AlexFrankiv_java-project-78")
+        property("sonar.projectKey", "AlexFrankiv_java-project-72")
         property("sonar.organization", "alexfrankiv")
     }
 }
