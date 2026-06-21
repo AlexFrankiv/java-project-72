@@ -3,10 +3,12 @@ package hexlet.code;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.resolve.ResourceCodeResolver;
+import hexlet.code.dto.UrlsPage;
 import io.javalin.Javalin;
 import io.javalin.rendering.template.JavalinJte;
 
-import java.util.Map;
+
+import static io.javalin.rendering.template.TemplateUtil.model;
 
 public class App {
     private static int getPort() {
@@ -24,8 +26,10 @@ public class App {
             config.bundledPlugins.enableDevLogging();
             config.fileRenderer(new JavalinJte(createTemplateEngine()));
         });
-        app.get("/", ctx ->
-                ctx.render("layout.jte", Map.of("title", "Главная", "page", "index")));
+        app.get("/", ctx -> {
+            var page = new UrlsPage();
+            ctx.render("index.jte", model("page", page));
+        });
         return app;
     }
     private static TemplateEngine createTemplateEngine() {
