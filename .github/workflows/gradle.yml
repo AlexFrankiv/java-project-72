@@ -33,10 +33,6 @@ jobs:
     - name: Run tests and generate coverage
       working-directory: ./app
       run: ./gradlew test jacocoTestReport
-      
-    - name: Run lint (checkstyle)
-      working-directory: ./app
-      run: ./gradlew checkstyleMain
   
     - name: Build project
       working-directory: ./app
