@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS courses;
+
+CREATE TABLE urls (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP
+);

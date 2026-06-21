@@ -34,6 +34,10 @@ dependencies {
     implementation("io.javalin:javalin-rendering:6.1.3")
 
     implementation("com.zaxxer:HikariCP:6.3.0")
+    implementation("com.h2database:h2:2.2.220")
+
+    compileOnly("org.projectlombok:lombok:1.18.46")
+    annotationProcessor("org.projectlombok:lombok:1.18.46")
 }
 
 tasks.test {
