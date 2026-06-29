@@ -40,6 +40,7 @@ dependencies {
 
     implementation("com.zaxxer:HikariCP:6.3.0")
     implementation("com.h2database:h2:2.2.220")
+    implementation("org.postgresql:postgresql:42.7.2")
 
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")
