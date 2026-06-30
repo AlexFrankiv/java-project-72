@@ -64,10 +64,12 @@ public class App {
     }
 
     public static Javalin getApp() {
-        try {
-            initDatabase();
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка инициализации БД", e);
+        if (BaseRepository.dataSource == null) {
+            try {
+                initDatabase();
+            } catch (Exception e) {
+                throw new RuntimeException("Ошибка инициализации БД", e);
+            }
         }
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
@@ -96,8 +98,8 @@ public class App {
                 String hostURl = instanceURL.getHost();
                 int portURl = instanceURL.getPort();
 
-                if (protocolURl == null || hostURl == null) {
-                    ctx.status(422).result("Некорректный URL");
+                if (protocolURl == null || hostURl == null  || !hostURl.contains(".")) {
+                    throw new Exception("Invalid URL");
                 }
 
                 var lowerProtocol = protocolURl.toLowerCase();
