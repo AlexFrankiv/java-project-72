@@ -3,13 +3,13 @@ plugins {
     id("org.sonarqube") version "7.3.1.8318"
     //checkstyle
     jacoco
-    id("gg.jte.gradle") version "3.1.9"
+    //id("gg.jte.gradle") version "3.1.9"
 }
-jte {
-    generate()
-    sourceDirectory.set(file("src/main/resources/templates").toPath())
-    targetDirectory.set(file("build/generated-sources/jte").toPath())
-}
+//jte {
+  //  generate()
+    //sourceDirectory.set(file("src/main/resources/templates").toPath())
+    //targetDirectory.set(file("build/generated-sources/jte").toPath())
+//}
 
 group = "hexlet.code"
 version = "1.0-SNAPSHOT"
