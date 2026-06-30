@@ -36,8 +36,8 @@ public class App {
 
     private static void initDatabase() throws Exception {
         String dbUrl = getDatabaseUrl();
-        String dbUser = System.getenv().getOrDefault("DATABASE_USER", "");
-        String dbPassword = System.getenv().getOrDefault("DATABASE_PASSWORD", "");
+        String dbUser = System.getenv().getOrDefault("USERNAME", "");
+        String dbPassword = System.getenv().getOrDefault("PASSWORD", "");
 
         var config = new HikariConfig();
         config.setJdbcUrl(dbUrl);
