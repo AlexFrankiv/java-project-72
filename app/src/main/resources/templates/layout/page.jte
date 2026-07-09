@@ -3,6 +3,7 @@
 @param Content content
 @param BasePage page = null
 
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -18,7 +19,6 @@
 </nav>
 
 <main class="container">
-    <!-- Flash-сообщения -->
     @if(page != null && page.getFlash() != null)
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             ${page.getFlash()}
@@ -26,7 +26,6 @@
         </div>
     @endif
 
-    <!-- Содержимое конкретной страницы -->
     ${content}
 </main>
 
