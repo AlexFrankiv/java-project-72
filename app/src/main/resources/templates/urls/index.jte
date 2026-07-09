@@ -1,10 +1,5 @@
 @import hexlet.code.dto.UrlsIndexPage
-@import hexlet.code.model.UrlCheck
-@import java.time.format.DateTimeFormatter
-
 @param UrlsIndexPage page
-
-!{var formatTime = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");}
 
 @template.layout.page(
 page = page,
@@ -21,17 +16,15 @@ content = @`
         </thead>
         <tbody>
         @if(page.getUrls().isEmpty())
-            <tr><td colspan="5" class="text-center">Нет добавленных страниц</td></tr>
+            <tr><td colspan="4" class="text-center">Нет добавленных страниц</td></tr>
         @else
             @for(var url : page.getUrls())
                 <tr>
                     <td>${url.getId()}</td>
                     <td><a href="/urls/${url.getId()}">${url.getName()}</a></td>
-                    <td>${url.getCreatedAtFormatted()}</td>
-
-                    @if(page.getLastCheck(url) != null)
-                        <td>${page.getLastCheck(url).getCreatedAt().toLocalDateTime().format(formatTime)}</td>
-                        <td>${page.getLastCheck(url).getStatusCode()}</td>
+                    @if(page.getLastChecks().containsKey(url.getId()))
+                        <td>${page.getLastChecks().get(url.getId()).getCreatedAtFormatted()}</td>
+                        <td>${page.getLastChecks().get(url.getId()).getStatusCode()}</td>
                     @else
                         <td></td>
                         <td></td>
