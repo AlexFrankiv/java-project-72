@@ -20,7 +20,7 @@
 
 <main class="container">
     @if(page != null && page.getFlash() != null)
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-${page.getFlashType() != null ? page.getFlashType() : "success"} alert-dismissible fade show" role="alert">
             ${page.getFlash()}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>

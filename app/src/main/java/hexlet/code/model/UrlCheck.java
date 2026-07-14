@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Getter
@@ -17,7 +17,7 @@ public class UrlCheck {
     private String h1;
     private String title;
     private String description;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
     public UrlCheck(Long urlId, Integer statusCode, String h1, String title, String description) {
         this.urlId = urlId;
@@ -25,12 +25,11 @@ public class UrlCheck {
         this.h1 = h1;
         this.title = title;
         this.description = description;
-        this.createdAt = new Timestamp(System.currentTimeMillis());
+        this.createdAt = LocalDateTime.now();
     }
 
     public String getCreatedAtFormatted() {
         if (createdAt == null) return "";
-        return createdAt.toLocalDateTime()
-                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        return createdAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 }

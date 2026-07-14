@@ -14,8 +14,5 @@ public class UrlsIndexPage extends BasePage {
     private final List<Url> urls;
     private final Map<Long, UrlCheck> lastChecks;
 
-    public UrlCheck getLastCheck(Url url) {
-        return lastChecks.get(url.getId());
-    }
 
 }

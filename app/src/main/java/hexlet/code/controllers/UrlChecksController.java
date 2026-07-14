@@ -4,26 +4,37 @@ import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
+import hexlet.code.utils.UrlUtils;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import kong.unirest.Unirest;
 import org.jsoup.Jsoup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 
 public class UrlChecksController {
-    public static void check(Context ctx) throws SQLException {
-        Long id = ctx.pathParamAsClass("id", Long.class).get();
-        var url = UrlRepository.find(id)
-                .orElseThrow(() -> new NotFoundResponse("URL не найден"));
+    private static final Logger log = LoggerFactory.getLogger(UrlChecksController.class);
+
+    public static void check(Context ctx) {
+        Long id;
+        try {
+            id = ctx.pathParamAsClass("id", Long.class).get();
+        } catch (Exception e) {
+            ctx.status(404).result("Неверный идентификатор");
+            return;
+        }
 
         try {
+            var url = UrlRepository.find(id)
+                    .orElseThrow(() -> new NotFoundResponse("URL не найден"));
+
             var response = Unirest.get(url.getName()).asString();
             int statusCode = response.getStatus();
             String body = response.getBody();
 
             if (statusCode >= 400) {
-                ctx.sessionAttribute("flash", "Произошла ошибка при проверке");
+                UrlUtils.alertFlash(ctx, "Произошла ошибка при проверке", "danger");
                 ctx.redirect(NamedRoutes.urlPath(id));
                 return;
             }
@@ -41,11 +52,15 @@ public class UrlChecksController {
             var check = new UrlCheck(id, statusCode, h1, title, description);
             UrlCheckRepository.save(check);
 
-            ctx.sessionAttribute("flash", "Страница успешно проверена");
+            UrlUtils.alertFlash(ctx, "Страница успешно проверена", "success");
             ctx.redirect(NamedRoutes.urlPath(id));
+            log.info("Проверка URL {} завершена успешно", url.getName());
 
+        } catch (NotFoundResponse e) {
+            ctx.status(404).result("URL не найден");
         } catch (Exception e) {
-            ctx.sessionAttribute("flash", "Произошла ошибка при проверке");
+            log.error("Ошибка при проверке URL id={}", id, e);
+            UrlUtils.alertFlash(ctx, "Произошла ошибка при проверке", "danger");
             ctx.redirect(NamedRoutes.urlPath(id));
         }
     }

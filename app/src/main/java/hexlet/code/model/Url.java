@@ -1,31 +1,31 @@
 package hexlet.code.model;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class Url {
     private Long id;
 
     private String name;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
     public Url(String name) {
         this.name = name;
-        this.createdAt = new Timestamp(System.currentTimeMillis());
+        this.createdAt = LocalDateTime.now();
     }
-    public Url(Long id, String name, Timestamp createdAt) {
+
+    public Url(Long id, String name, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.createdAt = createdAt;
     }
     public String getCreatedAtFormatted() {
         if (createdAt == null) return "";
-        return createdAt.toLocalDateTime().toLocalDate().toString();
+        return createdAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 }

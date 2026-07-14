@@ -4,6 +4,7 @@ import hexlet.code.model.Url;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,14 +15,11 @@ public class UrlRepository extends BaseRepository {
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, url.getName());
-            ps.setTimestamp(2, url.getCreatedAt());   // ← здесь используется setTimestamp()
+            ps.setTimestamp(2, Timestamp.valueOf(url.getCreatedAt()));
             ps.executeUpdate();
-
-            var generatedKeys = ps.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                url.setId(generatedKeys.getLong(1));
-            } else {
-                throw new SQLException("Не удалось получить id");
+            var keys = ps.getGeneratedKeys();
+            if (keys.next()) {
+                url.setId(keys.getLong(1));
             }
         }
     }
@@ -33,12 +31,11 @@ public class UrlRepository extends BaseRepository {
             ps.setLong(1, id);
             var rs = ps.executeQuery();
             if (rs.next()) {
-                var url = new Url(
+                return Optional.of(new Url(
                         rs.getLong("id"),
                         rs.getString("name"),
-                        rs.getTimestamp("created_at")
-                );
-                return Optional.of(url);
+                        rs.getTimestamp("created_at").toLocalDateTime()
+                ));
             }
             return Optional.empty();
         }
@@ -51,12 +48,11 @@ public class UrlRepository extends BaseRepository {
             ps.setString(1, name);
             var rs = ps.executeQuery();
             if (rs.next()) {
-                var url = new Url(
+                return Optional.of(new Url(
                         rs.getLong("id"),
                         rs.getString("name"),
-                        rs.getTimestamp("created_at")
-                );
-                return Optional.of(url);
+                        rs.getTimestamp("created_at").toLocalDateTime()
+                ));
             }
             return Optional.empty();
         }
@@ -67,16 +63,15 @@ public class UrlRepository extends BaseRepository {
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement()) {
             var rs = stmt.executeQuery(sql);
-            var result = new ArrayList<Url>();
+            var list = new ArrayList<Url>();
             while (rs.next()) {
-                var url = new Url(
+                list.add(new Url(
                         rs.getLong("id"),
                         rs.getString("name"),
-                        rs.getTimestamp("created_at")
-                );
-                result.add(url);
+                        rs.getTimestamp("created_at").toLocalDateTime()
+                ));
             }
-            return result;
+            return list;
         }
     }
 }

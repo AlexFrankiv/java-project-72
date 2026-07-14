@@ -153,4 +153,43 @@ public class AppTest {
             assertEquals("TestDescription", check.getDescription());
         });
     }
+    @Test
+    void testAddInvalidUrl() {
+        JavalinTest.test(app, (server, client) -> {
+            var requestBody = "url=not-a-url";
+            var response = client.post(NamedRoutes.urlsPath(), requestBody);
+            assertThat(response.code()).isEqualTo(422);
+            var body = response.body().string();
+            assertThat(body).contains("Некорректный URL");
+            assertThat(body).contains("not-a-url");
+        });
+    }
+    @Test
+    void testAddDuplicateUrl() {
+        JavalinTest.test(app, (server, client) -> {
+            client.post(NamedRoutes.urlsPath(), "url=https://example.com");
+            var response = client.post(NamedRoutes.urlsPath(), "url=https://example.com");
+            assertThat(response.code()).isEqualTo(200);
+            var body = response.body().string();
+            assertThat(body).contains("https://example.com");
+            var urls = UrlRepository.getEntities();
+            assertThat(urls).hasSize(1);
+        });
+    }
+    @Test
+    void testCheckUrlFailure() throws Exception {
+        mockWebServer.enqueue(new MockResponse().setResponseCode(500));
+        var testUrl = mockWebServer.url("/").toString();
+
+        JavalinTest.test(app, (server, client) -> {
+            var url = new Url(testUrl);
+            UrlRepository.save(url);
+            var urlId = url.getId();
+
+            client.post(NamedRoutes.urlPathChecks(urlId));
+
+            var checks = UrlCheckRepository.findByUrlId(urlId);
+            assertThat(checks).isEmpty();
+        });
+    }
 }
