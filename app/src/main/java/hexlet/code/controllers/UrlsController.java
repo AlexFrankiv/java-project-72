@@ -10,13 +10,13 @@ import hexlet.code.utils.NamedRoutes;
 import hexlet.code.utils.UrlUtils;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.sql.SQLDataException;
 import java.sql.SQLException;
-import org.slf4j.Logger;
 
 import static io.javalin.rendering.template.TemplateUtil.model;
 
@@ -28,15 +28,15 @@ public class UrlsController {
 
         try {
             if (rawUrl == null || rawUrl.isBlank()) {
-                UrlUtils.alertFlash(ctx, "URL не может быть пустым", "danger");
-                ctx.render(NamedRoutes.rootPath()).status(422);
+                var page = new UrlsPage("URL не может быть пустым", rawUrl);
+                ctx.render("index.jte", model("page", page)).status(422);
                 return;
             }
 
-            createUrl(rawUrl);
+            Url newUrl = createUrl(rawUrl);
 
             UrlUtils.alertFlash(ctx, "Страница успешно добавлена", "success");
-            ctx.redirect(NamedRoutes.urlsPath());
+            ctx.redirect(NamedRoutes.urlPath(newUrl.getId())); // ← редирект на /urls/{id}
             log.info("Страница успешно добавлена: {}", rawUrl);
 
         } catch (URISyntaxException | MalformedURLException | IllegalArgumentException e) {
@@ -55,7 +55,7 @@ public class UrlsController {
         }
     }
 
-    public static void createUrl(String rawUrl) throws URISyntaxException, MalformedURLException, SQLException {
+    public static Url createUrl(String rawUrl) throws URISyntaxException, MalformedURLException, SQLException {
         String normalized = UrlUtils.normalizeUrl(rawUrl);
         String domain = UrlUtils.extractDomain(normalized);
 
@@ -65,6 +65,7 @@ public class UrlsController {
 
         var url = new Url(domain);
         UrlRepository.save(url);
+        return url;
     }
 
 

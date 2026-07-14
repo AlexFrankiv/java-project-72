@@ -192,4 +192,9 @@ public class AppTest {
             assertThat(checks).isEmpty();
         });
     }
+    @Test
+    void testBaseRepository() {
+        var repo = new BaseRepository();
+        assertThat(repo).isNotNull();
+    }
 }
