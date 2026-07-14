@@ -36,7 +36,7 @@ public class UrlsController {
             Url newUrl = createUrl(rawUrl);
 
             UrlUtils.alertFlash(ctx, "Страница успешно добавлена", "success");
-            ctx.redirect(NamedRoutes.urlPath(newUrl.getId())); // ← редирект на /urls/{id}
+            ctx.redirect(NamedRoutes.urlPath(newUrl.getId())); // редирект на /urls/{id}
             log.info("Страница успешно добавлена: {}", rawUrl);
 
         } catch (URISyntaxException | MalformedURLException | IllegalArgumentException e) {
@@ -45,8 +45,17 @@ public class UrlsController {
             log.error("Ошибка валидации URL: {}", rawUrl, e);
 
         } catch (SQLDataException e) {
-            UrlUtils.alertFlash(ctx, "Страница уже существует", "danger");
-            ctx.redirect(NamedRoutes.urlsPath());
+            try {
+                String normalized = UrlUtils.normalizeUrl(rawUrl);
+                String domain = UrlUtils.extractDomain(normalized);
+                var existing = UrlRepository.findByName(domain)
+                        .orElseThrow(() -> new SQLDataException("Не найден существующий URL"));
+                UrlUtils.alertFlash(ctx, "Страница уже существует", "danger");
+                ctx.redirect(NamedRoutes.urlPath(existing.getId()));
+            } catch (Exception ex) {
+                UrlUtils.alertFlash(ctx, "Страница уже существует", "danger");
+                ctx.redirect(NamedRoutes.urlsPath());
+            }
             log.warn("Страница уже существует: {}", rawUrl);
 
         } catch (SQLException e) {
