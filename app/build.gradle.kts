@@ -26,6 +26,8 @@ sonar {
     properties {
         property("sonar.projectKey", "AlexFrankiv_java-project-72")
         property("sonar.organization", "alexfrankiv")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/xml/jacocoTestReport.xml")
+        property("sonar.coverage.exclusions", "**/gg/jte/generated/**")
     }
 }
 
@@ -60,6 +62,7 @@ tasks.test {
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
+        xml.required.set(true)
         html.required.set(true)
     }
     classDirectories.setFrom(
