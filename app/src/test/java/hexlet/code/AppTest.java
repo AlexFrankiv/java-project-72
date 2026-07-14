@@ -197,4 +197,22 @@ public class AppTest {
         var repo = new BaseRepository();
         assertThat(repo).isNotNull();
     }
+
+    @Test
+    void testCheckUrlWithNotFound() {
+        JavalinTest.test(app, (server, client) -> {
+            var response = client.post("/urls/999/checks");
+            assertThat(response.code()).isEqualTo(404);
+        });
+    }
+
+    @Test
+    void testNormalizeUrlWithPort() {
+        JavalinTest.test(app, (server, client) -> {
+            var response = client.post(NamedRoutes.urlsPath(), "url=https://example.com:8080");
+            assertThat(response.code()).isEqualTo(200);
+            var getResponse = client.get(NamedRoutes.urlPath("1"));
+            assertThat(getResponse.body().string()).contains("https://example.com:8080");
+        });
+    }
 }

@@ -60,8 +60,13 @@ tasks.test {
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
-        xml.required.set(true)
+        html.required.set(true)
     }
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            exclude("**/gg/jte/generated/**")
+        }
+    )
 }
 sourceSets {
     main {
