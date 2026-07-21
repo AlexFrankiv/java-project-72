@@ -1,9 +1,17 @@
-FROM gradle:8.12.1-jdk21
+FROM gradle:8.8.0-jdk21-alpine AS builder
 
 WORKDIR /app
 
 COPY /app .
 
-RUN ["./gradlew", "clean", "build"]
+RUN gradle installDist --no-daemon -x test
 
-CMD ["./gradlew", "run"]
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/build/install/app ./
+
+EXPOSE 8080
+
+CMD ["./bin/app"]

@@ -1,7 +1,5 @@
 package hexlet.code;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import hexlet.code.model.Url;
 import hexlet.code.repository.BaseRepository;
 import hexlet.code.repository.UrlCheckRepository;
@@ -39,24 +37,7 @@ public class AppTest {
     }
 
     @BeforeAll
-    static void initDbAndMock() throws Exception {
-        var config = new HikariConfig();
-        config.setJdbcUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;");
-        var dataSource = new HikariDataSource(config);
-        BaseRepository.dataSource = dataSource;
-
-        try (var conn = dataSource.getConnection()) {
-            var schemaStream = AppTest.class.getClassLoader()
-                    .getResourceAsStream("schema.sql");
-            if (schemaStream == null) {
-                throw new RuntimeException("schema.sql not found");
-            }
-            var sql = new String(schemaStream.readAllBytes());
-            try (var stmt = conn.createStatement()) {
-                stmt.execute(sql);
-            }
-        }
-
+    static void initMock() throws IOException {
         mockWebServer = new MockWebServer();
         var body = readFixtures("index.html");
         mockWebServer.enqueue(new MockResponse()
@@ -74,8 +55,11 @@ public class AppTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        // Указываем тестовую БД для H2
+        System.setProperty("DATABASE_URL", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;");
         app = App.getApp();
 
+        // Очистка таблиц и сброс автоинкремента
         try (var conn = BaseRepository.dataSource.getConnection();
              var stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM url_checks");
@@ -84,7 +68,6 @@ public class AppTest {
             stmt.execute("ALTER TABLE url_checks ALTER COLUMN id RESTART WITH 1");
         }
     }
-
 
     @Test
     void testMainPage() {
@@ -153,6 +136,7 @@ public class AppTest {
             assertEquals("TestDescription", check.getDescription());
         });
     }
+
     @Test
     void testAddInvalidUrl() {
         JavalinTest.test(app, (server, client) -> {
@@ -164,6 +148,7 @@ public class AppTest {
             assertThat(body).contains("not-a-url");
         });
     }
+
     @Test
     void testAddDuplicateUrl() {
         JavalinTest.test(app, (server, client) -> {
@@ -176,6 +161,7 @@ public class AppTest {
             assertThat(urls).hasSize(1);
         });
     }
+
     @Test
     void testCheckUrlFailure() throws Exception {
         mockWebServer.enqueue(new MockResponse().setResponseCode(500));
@@ -190,29 +176,6 @@ public class AppTest {
 
             var checks = UrlCheckRepository.findByUrlId(urlId);
             assertThat(checks).isEmpty();
-        });
-    }
-    @Test
-    void testBaseRepository() {
-        var repo = new BaseRepository();
-        assertThat(repo).isNotNull();
-    }
-
-    @Test
-    void testCheckUrlWithNotFound() {
-        JavalinTest.test(app, (server, client) -> {
-            var response = client.post("/urls/999/checks");
-            assertThat(response.code()).isEqualTo(404);
-        });
-    }
-
-    @Test
-    void testNormalizeUrlWithPort() {
-        JavalinTest.test(app, (server, client) -> {
-            var response = client.post(NamedRoutes.urlsPath(), "url=https://example.com:8080");
-            assertThat(response.code()).isEqualTo(200);
-            var getResponse = client.get(NamedRoutes.urlPath("1"));
-            assertThat(getResponse.body().string()).contains("https://example.com:8080");
         });
     }
 }

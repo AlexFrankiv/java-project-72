@@ -35,5 +35,6 @@ public class App {
     public static void main(String[] args) throws Exception {
         Javalin app = getApp();
         app.start(getPort());
+        System.out.println("Starting app on port: " + getPort());
     }
 }

@@ -4,103 +4,82 @@ import hexlet.code.dto.UrlsCheckPage;
 import hexlet.code.dto.UrlsIndexPage;
 import hexlet.code.dto.UrlsPage;
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
 import hexlet.code.utils.UrlUtils;
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import io.javalin.http.NotFoundResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.SQLDataException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.javalin.rendering.template.TemplateUtil.model;
 
+@Slf4j
 public class UrlsController {
-    private static final Logger log = LoggerFactory.getLogger(UrlsController.class);
-
-    public static void create(Context ctx) {
+    public static void create(Context ctx) throws SQLException, URISyntaxException {
         String rawUrl = ctx.formParam("url");
 
+        if (rawUrl == null || rawUrl.isBlank()) {
+            var page = new UrlsPage("URL не может быть пустым", rawUrl);
+            ctx.render("index.jte", model("page", page)).status(422);
+            return;
+        }
+
+        String normalized;
         try {
-            if (rawUrl == null || rawUrl.isBlank()) {
-                var page = new UrlsPage("URL не может быть пустым", rawUrl);
-                ctx.render("index.jte", model("page", page)).status(422);
-                return;
-            }
-
-            Url newUrl = createUrl(rawUrl);
-
-            UrlUtils.alertFlash(ctx, "Страница успешно добавлена", "success");
-            ctx.redirect(NamedRoutes.urlPath(newUrl.getId())); // редирект на /urls/{id}
-            log.info("Страница успешно добавлена: {}", rawUrl);
-
-        } catch (URISyntaxException | MalformedURLException | IllegalArgumentException e) {
+            normalized = UrlUtils.normalizeUrl(rawUrl);
+        } catch (URISyntaxException e) {
             var page = new UrlsPage("Некорректный URL", rawUrl);
             ctx.render("index.jte", model("page", page)).status(422);
             log.error("Ошибка валидации URL: {}", rawUrl, e);
-
-        } catch (SQLDataException e) {
-            try {
-                String normalized = UrlUtils.normalizeUrl(rawUrl);
-                String domain = UrlUtils.extractDomain(normalized);
-                var existing = UrlRepository.findByName(domain)
-                        .orElseThrow(() -> new SQLDataException("Не найден существующий URL"));
-                UrlUtils.alertFlash(ctx, "Страница уже существует", "danger");
-                ctx.redirect(NamedRoutes.urlPath(existing.getId()));
-            } catch (Exception ex) {
-                UrlUtils.alertFlash(ctx, "Страница уже существует", "danger");
-                ctx.redirect(NamedRoutes.urlsPath());
-            }
-            log.warn("Страница уже существует: {}", rawUrl);
-
-        } catch (SQLException e) {
-            log.error("Ошибка базы данных при добавлении URL: {}", rawUrl, e);
-            ctx.status(500).result("Внутренняя ошибка сервера");
+            return;
         }
-    }
 
-    public static Url createUrl(String rawUrl) throws URISyntaxException, MalformedURLException, SQLException {
-        String normalized = UrlUtils.normalizeUrl(rawUrl);
         String domain = UrlUtils.extractDomain(normalized);
 
-        if (UrlRepository.findByName(domain).isPresent()) {
-            throw new SQLDataException("Страница уже существует: " + domain);
+        var existing = UrlRepository.findByName(domain);
+        if (existing.isPresent()) {
+            UrlUtils.alertFlash(ctx, "Страница уже существует", "danger");
+            ctx.redirect(NamedRoutes.urlPath(existing.get().getId()));
+            return;
         }
 
-        var url = new Url(domain);
-        UrlRepository.save(url);
-        return url;
+        var newUrl = new Url(domain);
+        UrlRepository.save(newUrl);
+        UrlUtils.alertFlash(ctx, "Страница успешно добавлена", "success");
+        ctx.redirect(NamedRoutes.urlPath(newUrl.getId()));
+        log.info("Страница успешно добавлена: {}", rawUrl);
     }
-
 
     public static void index(Context ctx) throws SQLException {
         var urls = UrlRepository.getEntities();
-        var lastChecks = UrlCheckRepository.findLatestChecks();
+        Map<Long, UrlCheck> lastChecks = new HashMap<>();
+        for (Url url : urls) {
+            var lastCheck = UrlCheckRepository.findLastByUrlId(url.getId());
+            lastCheck.ifPresent(check -> lastChecks.put(url.getId(), check));
+        }
         var page = new UrlsIndexPage(urls, lastChecks);
-
         page.setFlash(ctx.consumeSessionAttribute("flash"));
         page.setFlashType(ctx.consumeSessionAttribute("flash-type"));
-
         ctx.render("urls/index.jte", model("page", page));
     }
-
 
     public static void show(Context ctx) throws SQLException {
         Long id = ctx.pathParamAsClass("id", Long.class).get();
         var url = UrlRepository.find(id)
                 .orElseThrow(() -> new NotFoundResponse("URL не найден"));
-
         var checks = UrlCheckRepository.findByUrlId(id);
         var page = new UrlsCheckPage(url, checks);
-
         page.setFlash(ctx.consumeSessionAttribute("flash"));
         page.setFlashType(ctx.consumeSessionAttribute("flash-type"));
-
         ctx.render("urls/show.jte", model("page", page));
     }
 }

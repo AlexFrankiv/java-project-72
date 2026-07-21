@@ -6,9 +6,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 public class UrlCheckRepository extends BaseRepository {
     public static void save(UrlCheck check) throws SQLException {
@@ -51,15 +50,14 @@ public class UrlCheckRepository extends BaseRepository {
         }
     }
 
-
-    public static Map<Long, UrlCheck> findLatestChecks() throws SQLException {
-        String sql = "SELECT DISTINCT ON (url_id) * FROM url_checks ORDER BY url_id, id DESC";
+    public static Optional<UrlCheck> findLastByUrlId(Long urlId) throws SQLException {
+        String sql = "SELECT * FROM url_checks WHERE url_id = ? ORDER BY id DESC LIMIT 1";
         try (var conn = dataSource.getConnection();
-             var stmt = conn.createStatement()) {
-            var rs = stmt.executeQuery(sql);
-            Map<Long, UrlCheck> map = new HashMap<>();
-            while (rs.next()) {
-                var check = new UrlCheck(
+             var ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, urlId);
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                return Optional.of(new UrlCheck(
                         rs.getLong("id"),
                         rs.getLong("url_id"),
                         rs.getInt("status_code"),
@@ -67,11 +65,11 @@ public class UrlCheckRepository extends BaseRepository {
                         rs.getString("title"),
                         rs.getString("description"),
                         rs.getTimestamp("created_at").toLocalDateTime()
-                );
-                map.put(check.getUrlId(), check);
+                ));
             }
-            return map;
+            return Optional.empty();
         }
     }
+
 
 }

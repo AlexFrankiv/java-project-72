@@ -23,7 +23,7 @@ content = @`
                     <td>${url.getId()}</td>
                     <td><a href="/urls/${url.getId()}">${url.getName()}</a></td>
                     @if(page.getLastChecks().containsKey(url.getId()))
-                        <td>${page.getLastChecks().get(url.getId()).getCreatedAtFormatted()}</td>
+                        <td>${page.getLastChecks().get(url.getId()) != null ? page.getLastChecks().get(url.getId()).getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : ""}</td>
                         <td>${page.getLastChecks().get(url.getId()).getStatusCode()}</td>
                     @else
                         <td></td>

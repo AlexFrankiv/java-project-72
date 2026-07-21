@@ -9,7 +9,7 @@ content = @`
         <tbody>
         <tr><td>ID</td><td>${page.getUrl().getId()}</td></tr>
         <tr><td>Имя</td><td>${page.getUrl().getName()}</td></tr>
-        <tr><td>Дата создания</td><td>${page.getUrl().getCreatedAtFormatted()}</td></tr>
+        <tr><td>Дата создания</td><td>${page.getUrl().getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))}</td></tr>
         </tbody>
     </table>
 
@@ -41,7 +41,7 @@ content = @`
                     <td>${check.getH1()}</td>
                     <td>${check.getTitle()}</td>
                     <td>${check.getDescription()}</td>
-                    <td>${check.getCreatedAtFormatted()}</td>
+                    <td>${check.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))}</td>
                 </tr>
             @endfor
         @endif
