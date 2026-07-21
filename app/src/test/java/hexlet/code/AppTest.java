@@ -58,11 +58,9 @@ public class AppTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // Указываем тестовую БД для H2
         System.setProperty("DATABASE_URL", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;");
         app = App.getApp();
 
-        // Очистка таблиц и сброс автоинкремента
         try (var conn = BaseRepository.dataSource.getConnection();
              var stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM url_checks");
@@ -220,4 +218,20 @@ public class AppTest {
     void testNormalizeUrlWithProtocol() throws Exception {
         assertThat(UrlUtils.normalizeUrl("https://example.com")).isEqualTo("https://example.com");
     }
+    @Test
+    void testCheckUrlWithNotFound() {
+        JavalinTest.test(app, (server, client) -> {
+            var response = client.post("/urls/999/checks");
+            assertThat(response.code()).isEqualTo(404);
+        });
+    }
+
+    @Test
+    void testCheckUrlWithInvalidId() {
+        JavalinTest.test(app, (server, client) -> {
+            var response = client.post("/urls/abc/checks");
+            assertThat(response.code()).isEqualTo(400);
+        });
+    }
+
 }

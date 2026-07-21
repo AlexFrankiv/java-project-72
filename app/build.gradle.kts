@@ -71,6 +71,9 @@ tasks.jacocoTestReport {
         }
     )
 }
+tasks.installDist {
+    dependsOn(tasks.generateJte)
+}
 sourceSets {
     main {
         java {
