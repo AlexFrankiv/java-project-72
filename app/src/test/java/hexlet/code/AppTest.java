@@ -234,4 +234,12 @@ public class AppTest {
         });
     }
 
+    @Test
+    void testExtractDomain() throws Exception {
+        assertThat(UrlUtils.extractDomain("https://example.com")).isEqualTo("https://example.com");
+        assertThat(UrlUtils.extractDomain("http://localhost:8080")).isEqualTo("http://localhost:8080");
+        assertThatThrownBy(() -> UrlUtils.extractDomain("example.com"))
+                .isInstanceOf(URISyntaxException.class);
+    }
+
 }
