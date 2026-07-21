@@ -7,7 +7,7 @@ plugins {
     id("gg.jte.gradle") version "3.1.12"
 }
 jte {
-   generate()
+    generate()
     sourceDirectory.set(file("src/main/resources/templates").toPath())
     targetDirectory.set(file("build/generated-sources/jte").toPath())
     contentType.set(gg.jte.ContentType.Html)

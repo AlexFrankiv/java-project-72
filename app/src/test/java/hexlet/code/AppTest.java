@@ -16,11 +16,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AppTest {
@@ -203,5 +205,19 @@ public class AppTest {
     @Test
     void testNormalizeUrlWithPort() throws Exception {
         assertThat(UrlUtils.normalizeUrl("example.com:8080")).isEqualTo("http://example.com:8080");
+    }
+    @Test
+    void testNormalizeUrlWithLocalhost() throws Exception {
+        assertThat(UrlUtils.normalizeUrl("localhost:8080")).isEqualTo("http://localhost:8080");
+    }
+
+    @Test
+    void testNormalizeUrlInvalid() {
+        assertThatThrownBy(() -> UrlUtils.normalizeUrl("not-a-url"))
+                .isInstanceOf(URISyntaxException.class);
+    }
+    @Test
+    void testNormalizeUrlWithProtocol() throws Exception {
+        assertThat(UrlUtils.normalizeUrl("https://example.com")).isEqualTo("https://example.com");
     }
 }
