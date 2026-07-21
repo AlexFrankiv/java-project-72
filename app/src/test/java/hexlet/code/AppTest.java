@@ -5,6 +5,7 @@ import hexlet.code.repository.BaseRepository;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
+import hexlet.code.utils.UrlUtils;
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
 import okhttp3.mockwebserver.MockResponse;
@@ -177,5 +178,30 @@ public class AppTest {
             var checks = UrlCheckRepository.findByUrlId(urlId);
             assertThat(checks).isEmpty();
         });
+    }
+    @Test
+    void testFindByUrlIdEmpty() throws Exception {
+        var checks = UrlCheckRepository.findByUrlId(999L);
+        assertThat(checks).isEmpty();
+    }
+
+    @Test
+    void testFindLastByUrlIdEmpty() throws Exception {
+        var lastCheck = UrlCheckRepository.findLastByUrlId(999L);
+        assertThat(lastCheck).isEmpty();
+    }
+    @Test
+    void testBaseRepository() {
+        BaseRepository repo = new BaseRepository();
+        assertThat(repo).isNotNull();
+    }
+    @Test
+    void testNormalizeUrlWithoutProtocol() throws Exception {
+        assertThat(UrlUtils.normalizeUrl("example.com")).isEqualTo("http://example.com");
+    }
+
+    @Test
+    void testNormalizeUrlWithPort() throws Exception {
+        assertThat(UrlUtils.normalizeUrl("example.com:8080")).isEqualTo("http://example.com:8080");
     }
 }
