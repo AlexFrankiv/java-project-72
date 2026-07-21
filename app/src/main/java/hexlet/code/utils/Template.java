@@ -2,13 +2,13 @@ package hexlet.code.utils;
 
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
-import gg.jte.resolve.ResourceCodeResolver;
-import hexlet.code.App;
+
+
+import java.nio.file.Path;
 
 public class Template {
     public static TemplateEngine createTemplateEngine() {
-        ClassLoader classLoader = App.class.getClassLoader();
-        ResourceCodeResolver codeResolver = new ResourceCodeResolver("templates", classLoader);
-        return TemplateEngine.create(codeResolver, ContentType.Html);
+        var targetDirectory = Path.of("jte-classes");
+        return TemplateEngine.createPrecompiled(targetDirectory, ContentType.Html);
     }
 }
