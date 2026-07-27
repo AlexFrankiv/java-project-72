@@ -1,0 +1,17 @@
+.git
+.gitignore
+README.md
+.env
+*.log
+*.tmp
+.idea/
+*.iml
+.vscode/
+build/
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+app/build/
+app/.gradle/
+app/.idea/
+app/*.iml
+app/jte-classes/

@@ -139,11 +139,10 @@ public class AppTest {
         JavalinTest.test(app, (server, client) -> {
             var requestBody = "url=not-a-url";
             var response = client.post(NamedRoutes.urlsPath(), requestBody);
-            assertThat(response.code()).isEqualTo(200);
+            assertThat(response.code()).isEqualTo(422);
             var body = response.body().string();
-            assertThat(body).contains("Анализатор страниц");
-            assertThat(body).contains("Бесплатно проверяйте сайты на SEO-пригодность");
-            assertThat(body).contains("action=\"/urls\"");
+            assertThat(body).contains("Некорректный URL");
+            assertThat(body).contains("not-a-url");
         });
     }
 
@@ -243,6 +242,16 @@ public class AppTest {
         assertThat(UrlUtils.extractDomain("http://localhost:8080")).isEqualTo("http://localhost:8080");
         assertThatThrownBy(() -> UrlUtils.extractDomain("example.com"))
                 .isInstanceOf(URISyntaxException.class);
+    }
+    @Test
+    void testDataBaseInitializationTwice() throws Exception {
+        var dataSource = BaseRepository.dataSource;
+        assertThat(dataSource).isNotNull();
+    }
+
+    @Test
+    void testNormalizeUrlWithHttp() throws Exception {
+        assertThat(UrlUtils.normalizeUrl("http://example.com")).isEqualTo("http://example.com");
     }
 
 }

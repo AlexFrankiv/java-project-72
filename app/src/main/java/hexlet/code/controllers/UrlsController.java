@@ -4,7 +4,6 @@ import hexlet.code.dto.UrlsCheckPage;
 import hexlet.code.dto.UrlsIndexPage;
 import hexlet.code.dto.UrlsPage;
 import hexlet.code.model.Url;
-import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
@@ -15,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static io.javalin.rendering.template.TemplateUtil.model;
 
@@ -24,7 +21,6 @@ import static io.javalin.rendering.template.TemplateUtil.model;
 public class UrlsController {
     public static void create(Context ctx) throws SQLException, URISyntaxException {
         String rawUrl = ctx.formParam("url");
-
         if (rawUrl == null || rawUrl.isBlank()) {
             var page = new UrlsPage("URL не может быть пустым", rawUrl);
             ctx.render("index.jte", model("page", page)).status(422);
@@ -35,9 +31,8 @@ public class UrlsController {
         try {
             normalized = UrlUtils.normalizeUrl(rawUrl);
         } catch (URISyntaxException e) {
-            ctx.sessionAttribute("flash", "Некорректный URL");
-            ctx.sessionAttribute("flash-type", "danger");
-            ctx.redirect(NamedRoutes.rootPath());
+            var page = new UrlsPage("Некорректный URL", rawUrl);
+            ctx.render("index.jte", model("page", page)).status(422);
             log.error("Ошибка валидации URL: {}", rawUrl, e);
             return;
         }
