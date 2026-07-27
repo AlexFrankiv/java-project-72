@@ -1,6 +1,7 @@
 package hexlet.code;
 
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.BaseRepository;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
@@ -261,5 +262,22 @@ public class AppTest {
     void testNormalizeUrlWithHttp() throws Exception {
         assertThat(UrlUtils.normalizeUrl("http://example.com")).isEqualTo("http://example.com");
     }
+    @Test
+    void testFindLatestChecksEmpty() throws Exception {
+        var map = UrlCheckRepository.findLatestChecks();
+        assertThat(map).isEmpty();
+    }
+
+    @Test
+    void testFindLatestChecksWithData() throws Exception {
+        var url = new Url("https://example.com");
+        UrlRepository.save(url);
+        var check = new UrlCheck(url.getId(), 200, "h1", "title", "desc");
+        UrlCheckRepository.save(check);
+        var map = UrlCheckRepository.findLatestChecks();
+        assertThat(map).hasSize(1);
+        assertThat(map.get(url.getId()).getStatusCode()).isEqualTo(200);
+    }
+
 
 }
