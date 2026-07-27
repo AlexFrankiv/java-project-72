@@ -10,8 +10,7 @@ import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,8 +25,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AppTest {
-    private static Javalin app;
-    private static MockWebServer mockWebServer;
+    private Javalin app;
+    private MockWebServer mockWebServer;
 
     private static Path getFixturePath(String fileName) {
         return Paths.get("src", "test", "resources", "fixtures", fileName)
@@ -37,23 +36,6 @@ public class AppTest {
     private static String readFixtures(String fileName) throws IOException {
         var filePath = getFixturePath(fileName);
         return Files.readString(filePath).trim();
-    }
-
-    @BeforeAll
-    static void initMock() throws IOException {
-        mockWebServer = new MockWebServer();
-        var body = readFixtures("index.html");
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(body)
-                .setResponseCode(200));
-        mockWebServer.start();
-    }
-
-    @AfterAll
-    static void stopMockServer() throws IOException {
-        if (mockWebServer != null) {
-            mockWebServer.shutdown();
-        }
     }
 
     @BeforeEach
@@ -67,6 +49,16 @@ public class AppTest {
             stmt.execute("DELETE FROM urls");
             stmt.execute("ALTER TABLE urls ALTER COLUMN id RESTART WITH 1");
             stmt.execute("ALTER TABLE url_checks ALTER COLUMN id RESTART WITH 1");
+        }
+
+        mockWebServer = new MockWebServer();
+        mockWebServer.start();
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (mockWebServer != null) {
+            mockWebServer.shutdown();
         }
     }
 
@@ -119,6 +111,10 @@ public class AppTest {
 
     @Test
     void testCheckUrl() throws IOException {
+        var body = readFixtures("index.html");
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(body)
+                .setResponseCode(200));
         var testUrl = mockWebServer.url("/").toString();
 
         JavalinTest.test(app, (server, client) -> {
@@ -143,10 +139,11 @@ public class AppTest {
         JavalinTest.test(app, (server, client) -> {
             var requestBody = "url=not-a-url";
             var response = client.post(NamedRoutes.urlsPath(), requestBody);
-            assertThat(response.code()).isEqualTo(422);
+            assertThat(response.code()).isEqualTo(200);
             var body = response.body().string();
-            assertThat(body).contains("Некорректный URL");
-            assertThat(body).contains("not-a-url");
+            assertThat(body).contains("Анализатор страниц");
+            assertThat(body).contains("Бесплатно проверяйте сайты на SEO-пригодность");
+            assertThat(body).contains("action=\"/urls\"");
         });
     }
 
@@ -179,6 +176,7 @@ public class AppTest {
             assertThat(checks).isEmpty();
         });
     }
+
     @Test
     void testFindByUrlIdEmpty() throws Exception {
         var checks = UrlCheckRepository.findByUrlId(999L);
@@ -190,11 +188,13 @@ public class AppTest {
         var lastCheck = UrlCheckRepository.findLastByUrlId(999L);
         assertThat(lastCheck).isEmpty();
     }
+
     @Test
     void testBaseRepository() {
         BaseRepository repo = new BaseRepository();
         assertThat(repo).isNotNull();
     }
+
     @Test
     void testNormalizeUrlWithoutProtocol() throws Exception {
         assertThat(UrlUtils.normalizeUrl("example.com")).isEqualTo("http://example.com");
@@ -204,6 +204,7 @@ public class AppTest {
     void testNormalizeUrlWithPort() throws Exception {
         assertThat(UrlUtils.normalizeUrl("example.com:8080")).isEqualTo("http://example.com:8080");
     }
+
     @Test
     void testNormalizeUrlWithLocalhost() throws Exception {
         assertThat(UrlUtils.normalizeUrl("localhost:8080")).isEqualTo("http://localhost:8080");
@@ -214,10 +215,12 @@ public class AppTest {
         assertThatThrownBy(() -> UrlUtils.normalizeUrl("not-a-url"))
                 .isInstanceOf(URISyntaxException.class);
     }
+
     @Test
     void testNormalizeUrlWithProtocol() throws Exception {
         assertThat(UrlUtils.normalizeUrl("https://example.com")).isEqualTo("https://example.com");
     }
+
     @Test
     void testCheckUrlWithNotFound() {
         JavalinTest.test(app, (server, client) -> {

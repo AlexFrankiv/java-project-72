@@ -10,11 +10,9 @@ import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
 import hexlet.code.utils.UrlUtils;
 import io.javalin.http.Context;
-import io.javalin.http.HttpStatus;
 import io.javalin.http.NotFoundResponse;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -37,8 +35,9 @@ public class UrlsController {
         try {
             normalized = UrlUtils.normalizeUrl(rawUrl);
         } catch (URISyntaxException e) {
-            var page = new UrlsPage("Некорректный URL", rawUrl);
-            ctx.render("index.jte", model("page", page)).status(422);
+            ctx.sessionAttribute("flash", "Некорректный URL");
+            ctx.sessionAttribute("flash-type", "danger");
+            ctx.redirect(NamedRoutes.rootPath());
             log.error("Ошибка валидации URL: {}", rawUrl, e);
             return;
         }
@@ -47,25 +46,23 @@ public class UrlsController {
 
         var existing = UrlRepository.findByName(domain);
         if (existing.isPresent()) {
-            UrlUtils.alertFlash(ctx, "Страница уже существует", "danger");
+            ctx.sessionAttribute("flash", "Страница уже существует");
+            ctx.sessionAttribute("flash-type", "danger");
             ctx.redirect(NamedRoutes.urlPath(existing.get().getId()));
             return;
         }
 
         var newUrl = new Url(domain);
         UrlRepository.save(newUrl);
-        UrlUtils.alertFlash(ctx, "Страница успешно добавлена", "success");
+        ctx.sessionAttribute("flash", "Страница успешно добавлена");
+        ctx.sessionAttribute("flash-type", "success");
         ctx.redirect(NamedRoutes.urlPath(newUrl.getId()));
         log.info("Страница успешно добавлена: {}", rawUrl);
     }
 
     public static void index(Context ctx) throws SQLException {
         var urls = UrlRepository.getEntities();
-        Map<Long, UrlCheck> lastChecks = new HashMap<>();
-        for (Url url : urls) {
-            var lastCheck = UrlCheckRepository.findLastByUrlId(url.getId());
-            lastCheck.ifPresent(check -> lastChecks.put(url.getId(), check));
-        }
+        var lastChecks = UrlCheckRepository.findLatestChecks();
         var page = new UrlsIndexPage(urls, lastChecks);
         page.setFlash(ctx.consumeSessionAttribute("flash"));
         page.setFlashType(ctx.consumeSessionAttribute("flash-type"));

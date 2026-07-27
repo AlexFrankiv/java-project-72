@@ -15,6 +15,13 @@
 <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
     <div class="container">
         <a class="navbar-brand" href="/">Анализатор страниц</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/urls">Сайты</a>
+                </li>
+            </ul>
+        </div>
     </div>
 </nav>
 
