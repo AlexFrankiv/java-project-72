@@ -3,6 +3,7 @@ package hexlet.code;
 import hexlet.code.controllers.RootController;
 import hexlet.code.controllers.UrlChecksController;
 import hexlet.code.controllers.UrlsController;
+import hexlet.code.repository.BaseRepository;
 import hexlet.code.utils.DataBaseInitialization;
 import hexlet.code.utils.NamedRoutes;
 import hexlet.code.utils.Template;
@@ -16,7 +17,9 @@ public class App {
     }
 
     public static Javalin getApp() throws Exception {
-        DataBaseInitialization.initDatabase();
+        if (BaseRepository.dataSource == null) {
+            DataBaseInitialization.initDatabase();
+        }
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
             config.fileRenderer(new JavalinJte(Template.createTemplateEngine()));

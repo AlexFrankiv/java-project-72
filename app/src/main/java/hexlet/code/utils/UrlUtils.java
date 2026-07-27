@@ -16,12 +16,6 @@ public class UrlUtils {
         if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
             normalized = "http://" + normalized;
         }
-
-        var uri = new URI(normalized);
-        String host = uri.getHost();
-        if (host == null || !(host.contains(".") || host.equals("localhost") || host.equals("127.0.0.1"))) {
-            throw new URISyntaxException(normalized, "Invalid host");
-        }
         return normalized;
     }
 
@@ -32,6 +26,9 @@ public class UrlUtils {
         int port = uri.getPort();
         if (protocol == null || host == null) {
             throw new URISyntaxException(url, "Missing protocol or host");
+        }
+        if (!(host.contains(".") || host.equals("localhost") || host.equals("127.0.0.1"))) {
+            throw new URISyntaxException(url, "Invalid host");
         }
         String domain = protocol.toLowerCase() + "://" + host.toLowerCase();
         if (port > 0) {

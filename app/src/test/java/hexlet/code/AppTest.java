@@ -4,6 +4,7 @@ import hexlet.code.model.Url;
 import hexlet.code.repository.BaseRepository;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
+import hexlet.code.utils.DataBaseInitialization;
 import hexlet.code.utils.NamedRoutes;
 import hexlet.code.utils.UrlUtils;
 import io.javalin.Javalin;
@@ -11,6 +12,7 @@ import io.javalin.testtools.JavalinTest;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +24,6 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AppTest {
     private Javalin app;
@@ -38,9 +39,14 @@ public class AppTest {
         return Files.readString(filePath).trim();
     }
 
+    @BeforeAll
+    static void initDb() throws Exception {
+        System.setProperty("DATABASE_URL", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;");
+        DataBaseInitialization.initDatabase();
+    }
+
     @BeforeEach
     void setUp() throws Exception {
-        System.setProperty("DATABASE_URL", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;");
         app = App.getApp();
 
         try (var conn = BaseRepository.dataSource.getConnection();
@@ -127,10 +133,10 @@ public class AppTest {
             var checks = UrlCheckRepository.findByUrlId(urlId);
             assertThat(checks).hasSize(1);
             var check = checks.get(0);
-            assertEquals(200, check.getStatusCode());
-            assertEquals("TestTitle", check.getTitle());
-            assertEquals("TestH1", check.getH1());
-            assertEquals("TestDescription", check.getDescription());
+            assertThat(check.getStatusCode()).isEqualTo(200);
+            assertThat(check.getTitle()).isEqualTo("TestTitle");
+            assertThat(check.getH1()).isEqualTo("TestH1");
+            assertThat(check.getDescription()).isEqualTo("TestDescription");
         });
     }
 
@@ -210,9 +216,8 @@ public class AppTest {
     }
 
     @Test
-    void testNormalizeUrlInvalid() {
-        assertThatThrownBy(() -> UrlUtils.normalizeUrl("not-a-url"))
-                .isInstanceOf(URISyntaxException.class);
+    void testNormalizeUrlInvalid() throws URISyntaxException {
+        assertThat(UrlUtils.normalizeUrl("not-a-url")).isEqualTo("http://not-a-url");
     }
 
     @Test
@@ -242,7 +247,10 @@ public class AppTest {
         assertThat(UrlUtils.extractDomain("http://localhost:8080")).isEqualTo("http://localhost:8080");
         assertThatThrownBy(() -> UrlUtils.extractDomain("example.com"))
                 .isInstanceOf(URISyntaxException.class);
+        assertThatThrownBy(() -> UrlUtils.extractDomain("not-a-url"))
+                .isInstanceOf(URISyntaxException.class);
     }
+
     @Test
     void testDataBaseInitializationTwice() throws Exception {
         var dataSource = BaseRepository.dataSource;

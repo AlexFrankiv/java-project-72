@@ -12,6 +12,7 @@ import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 
@@ -26,10 +27,10 @@ public class UrlsController {
             ctx.render("index.jte", model("page", page)).status(422);
             return;
         }
+        String normalized = UrlUtils.normalizeUrl(rawUrl);
 
-        String normalized;
         try {
-            normalized = UrlUtils.normalizeUrl(rawUrl);
+            new URI(normalized);
         } catch (URISyntaxException e) {
             var page = new UrlsPage("Некорректный URL", rawUrl);
             ctx.render("index.jte", model("page", page)).status(422);
@@ -37,7 +38,15 @@ public class UrlsController {
             return;
         }
 
-        String domain = UrlUtils.extractDomain(normalized);
+        String domain;
+        try {
+            domain = UrlUtils.extractDomain(normalized);
+        } catch (URISyntaxException e) {
+            var page = new UrlsPage("Некорректный URL", rawUrl);
+            ctx.render("index.jte", model("page", page)).status(422);
+            log.error("Ошибка валидации URL: {}", rawUrl, e);
+            return;
+        }
 
         var existing = UrlRepository.findByName(domain);
         if (existing.isPresent()) {
